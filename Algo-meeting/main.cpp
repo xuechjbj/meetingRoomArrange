@@ -29,14 +29,14 @@ public:
     RoomTime(){
     }
     
-    void setBusyTime(MeetingTime *meeting){
-        meetingList.push_back(meeting);
+    void setBusyTime(std::shared_ptr<MeetingTime> &meeting){
+        meetingHold.push_back(meeting);
     }
     
-    bool isIdle(MeetingTime *meeting){
-        for (std::list<MeetingTime*>::iterator it = meetingList.begin(); it != meetingList.end(); it++){
-            int start = (*it)->start;
-            int end = (*it)->end;
+    bool isIdle(std::shared_ptr<MeetingTime> &meeting){
+        for (std::shared_ptr<MeetingTime> &m : meetingHold){
+            int start = m->start;
+            int end = m->end;
             
             if(meeting->start > start && meeting->start < end)
                 return false;
@@ -52,10 +52,8 @@ public:
     }
     
 private:
-    int start;
-    int end;
     
-    std::list<MeetingTime*> meetingList;
+    std::list<std::shared_ptr<MeetingTime>> meetingHold;
     
 };
 
@@ -63,8 +61,8 @@ RoomTime Room[MAX_ROOMS];
 int roomId;
 int roomNum;
 
-int reuseRoom(std::list<MeetingTime*> &meetingList, MeetingTime *newMeeting){
-    for(MeetingTime *meeting : meetingList){
+int reuseRoom(std::list<std::shared_ptr<MeetingTime>> &meetingList, std::shared_ptr<MeetingTime> &newMeeting){
+    for(std::shared_ptr<MeetingTime> &meeting : meetingList){
         if(meeting->roomId != NO_ROOM &&  Room[meeting->roomId].isIdle(newMeeting)){
             return meeting->roomId;
         }
@@ -74,29 +72,19 @@ int reuseRoom(std::list<MeetingTime*> &meetingList, MeetingTime *newMeeting){
 
 int main(int argc, const char * argv[]) {
     roomNum = 0;
-    std::list<MeetingTime*> meetingList;
+    std::list<std::shared_ptr<MeetingTime>> meetingList;
     
-    /*meetingList.push_back(new MeetingTime(100, 220));
-    meetingList.push_back(new MeetingTime(130, 150));
-    meetingList.push_back(new MeetingTime(130, 160));
-    meetingList.push_back(new MeetingTime(120, 160));
-    meetingList.push_back(new MeetingTime(160, 170));
-    meetingList.push_back(new MeetingTime(170, 180));
-    meetingList.push_back(new MeetingTime(160, 180));
-    meetingList.push_back(new MeetingTime(160, 190));
-    meetingList.push_back(new MeetingTime(160, 190));
-    meetingList.push_back(new MeetingTime(190, 220));*/
-    meetingList.push_back(new MeetingTime(1,3));
-    meetingList.push_back(new MeetingTime(1,5));
-    meetingList.push_back(new MeetingTime(6,7));
-    meetingList.push_back(new MeetingTime(4,7));
+    meetingList.push_back(std::shared_ptr<MeetingTime>(new MeetingTime(1,3)));
+    meetingList.push_back(std::shared_ptr<MeetingTime>(new MeetingTime(1,5)));
+    meetingList.push_back(std::shared_ptr<MeetingTime>(new MeetingTime(6,7)));
+    meetingList.push_back(std::shared_ptr<MeetingTime>(new MeetingTime(4,7)));
     
-    meetingList.sort([](MeetingTime *t1, MeetingTime *t2){
+    meetingList.sort([](std::shared_ptr<MeetingTime>&t1, std::shared_ptr<MeetingTime>&t2){
                   return t1->start < t2->start?true:
                   ((t1->start == t2->start)? t1->end <= t2->end:false);
               });
     
-    for(MeetingTime *meeting : meetingList){
+    for(std::shared_ptr<MeetingTime>& meeting : meetingList){
         int roomNo = reuseRoom(meetingList, meeting);
         if(roomNo == NO_ROOM){
             roomNo = roomNum++;
@@ -107,7 +95,7 @@ int main(int argc, const char * argv[]) {
     
     printf("Need meeting rooms=%d\n", roomNum);
     std::for_each(meetingList.begin(), meetingList.end(),
-                  [](MeetingTime *meeting){
+                  [](std::shared_ptr<MeetingTime>&meeting){
                       printf("(%d, %d, room=%d)\n", meeting->start, meeting->end, meeting->roomId);
                   });
     
